@@ -1,12 +1,9 @@
-export const runtime = 'nodejs'; // Forces Vercel to use Node instead of Edge
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
+    request: { headers: request.headers },
   })
 
   const supabase = createServerClient(
@@ -14,38 +11,33 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name) {
-          return request.cookies.get(name)?.value
-        },
+        get(name) { return request.cookies.get(name)?.value },
         set(name, value, options) {
           request.cookies.set({ name, value, ...options })
-          response = NextResponse.next({
-            request: { headers: request.headers },
-          })
+          response = NextResponse.next({ request: { headers: request.headers } })
           response.cookies.set({ name, value, ...options })
         },
         remove(name, options) {
           request.cookies.set({ name, value: '', ...options })
-          response = NextResponse.next({
-            request: { headers: request.headers },
-          })
+          response = NextResponse.next({ request: { headers: request.headers } })
           response.cookies.set({ name, value: '', ...options })
         },
       },
     }
   )
 
+  // 1. Get the user session
   const { data: { user } } = await supabase.auth.getUser()
 
   const isLoginPage = request.nextUrl.pathname.startsWith('/login')
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth')
 
-  // 1. If not logged in and NOT on login/auth pages, redirect to login
+  // 2. Not logged in? Redirect to login (unless already there)
   if (!user && !isLoginPage && !isAuthPage) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // 2. If logged in, check is_superadmin status
+  // 3. Logged in? Check SuperAdmin status
   if (user && !isAuthPage) {
     const { data: profile } = await supabase
       .from('profiles')
@@ -53,9 +45,10 @@ export async function middleware(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    // Block non-admins unless they are already on the login page (to avoid loops)
+    // If they aren't a superadmin and they aren't on the login page, BOUNCE THEM.
     if (!profile?.is_superadmin && !isLoginPage) {
-      return new NextResponse("Access Denied: SuperAdmins Only", { status: 403 })
+      // You can redirect to an 'unauthorized' page or just return a hard 403
+      return new NextResponse("UNAUTHORIZED: SUPERADMIN PRIVILEGES REQUIRED", { status: 403 })
     }
   }
 
@@ -63,5 +56,13 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }
