@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '../../utils/supabase/server'
+import { createClient } from '../../../utils/supabase/server'
 
 export async function GET(request: Request) {
   // 1. Grab the URL the user just landed on
