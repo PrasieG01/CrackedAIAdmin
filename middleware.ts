@@ -1,3 +1,4 @@
+export const runtime = 'nodejs'; // Forces Vercel to use Node instead of Edge
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
