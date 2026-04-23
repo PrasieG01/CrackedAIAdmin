@@ -9,7 +9,7 @@ const bangers = Bangers({ weight: "400", subsets: ["latin"] });
 export default async function ManageImages({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; editId?: string }>;
 }) {
   const supabase = await createClient();
   const params = await searchParams;
