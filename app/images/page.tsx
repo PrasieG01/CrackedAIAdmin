@@ -48,6 +48,22 @@ async function addImage(formData: FormData) {
     }
   }
 
+  async function updateImage(formData: FormData) {
+  'use server'
+  const supabase = await createClient()
+  const id = formData.get('id')
+  const url = formData.get('url')
+  const description = formData.get('description')
+  
+  await supabase.from('images').update({ 
+    url: url, 
+    image_description: description 
+  }).eq('id', id)
+  
+  revalidatePath('/images')
+  redirect('/images') 
+}
+
   async function deleteImage(formData: FormData) {
     'use server'
     const supabase = await createClient()
@@ -76,7 +92,7 @@ async function addImage(formData: FormData) {
 </Link>
     </header>
 
-      {/* UPLOAD DRAWER (Simplified for space) */}
+      {/* UPLOAD DRAWER */}
       <section className="mb-8 bg-zinc-900 border border-zinc-800 p-4">
         <form action={addImage} className="flex flex-wrap gap-4">
           <input name="url" placeholder="IMAGE_URL" className="flex-1 bg-black border border-zinc-700 p-2 text-[10px]" required />
@@ -87,34 +103,102 @@ async function addImage(formData: FormData) {
 
       {/* DATA CARDS*/}
       <div className="space-y-4">
-        {images?.map((img) => (
-          <div key={img.id} className="bg-zinc-900/50 border-l-4 border-zinc-800 hover:border-yellow-400 p-4 flex gap-6 transition-all">
-            {/* Visual */}
-            <div className="w-24 h-24 flex-shrink-0 bg-black border border-zinc-800 overflow-hidden">
-                <img src={img.url} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" />
+        {images?.map((img) => {
+  const isEditing = params.editId === img.id;
+
+  return (
+    <div key={img.id} className={`bg-zinc-900/50 border-l-4 p-4 flex gap-6 transition-all ${isEditing ? 'border-blue-500 bg-blue-900/10' : 'border-zinc-800 hover:border-yellow-400'}`}>
+      
+      {/* 1. VISUAL COLUMN */}
+      <div className="flex flex-col gap-2 w-24 flex-shrink-0">
+        <div className="w-24 h-24 bg-black border border-zinc-800 overflow-hidden">
+          <img src={img.url} className={`w-full h-full object-cover transition-all duration-500 ${isEditing ? 'grayscale-0' : 'grayscale hover:grayscale-0'}`} />
+        </div>
+        
+        {/* UNLOCK / CANCEL BUTTON UNDER IMAGE */}
+        {isEditing ? (
+          <Link 
+            href="/images" 
+            className="w-full bg-zinc-800 text-zinc-400 py-1 text-[8px] font-black text-center hover:bg-zinc-700 hover:text-white uppercase tracking-tighter"
+          >
+            [ Cancel_Edit ]
+          </Link>
+        ) : (
+          <Link 
+            href={`/images?editId=${img.id}`} 
+            className="w-full bg-blue-900/20 text-blue-500 border border-blue-900/30 py-1 text-[8px] font-black text-center hover:bg-blue-600 hover:text-white uppercase tracking-tighter transition-all"
+          >
+            Unlock_Edit
+          </Link>
+        )}
+      </div>
+
+      {/* 2. INFO / FORM COLUMN */}
+      <div className="flex-grow min-w-0">
+        <div className="flex justify-between items-start mb-2">
+          <span className="text-[9px] text-yellow-400 font-black tracking-widest uppercase">
+            SPECIMEN_ID: {img.id.slice(0,8)}
+          </span>
+          {isEditing && (
+            <span className="text-[10px] bg-blue-600 text-white px-2 font-black animate-pulse uppercase">
+              MOD_ACTIVE
+            </span>
+          )}
+        </div>
+
+        {isEditing ? (
+          <form action={updateImage} className="space-y-3">
+            <input type="hidden" name="id" value={img.id} />
+            <div>
+              <label className="text-[8px] text-zinc-500 uppercase font-bold mb-1 block">Internal_Description</label>
+              <input 
+                name="description" 
+                defaultValue={img.image_description} 
+                className="w-full bg-black border border-blue-900 p-2 text-sm font-bold text-white focus:border-blue-500 outline-none"
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="text-[8px] text-zinc-500 uppercase font-bold mb-1 block">Asset_Url_Source</label>
+              <input 
+                name="url" 
+                defaultValue={img.url} 
+                className="w-full bg-black border border-blue-900 p-2 text-[9px] font-mono text-zinc-400 focus:border-blue-500 outline-none"
+              />
             </div>
 
-            {/* Info Block */}
-            <div className="flex-grow min-w-0">
-                <div className="flex justify-between items-start mb-2">
-                    <span className="text-[9px] text-yellow-400 font-black tracking-widest">SPECIMEN_ID: {img.id.slice(0,8)}</span>
-                    <span className="text-[9px] text-zinc-600 italic">{new Date(img.created_datetime_utc).toLocaleString()}</span>
-                </div>
-                {/* Description: Now wraps instead of cutting off */}
-                <p className="text-sm font-bold text-zinc-100 leading-tight mb-2 break-words">{img.image_description}</p>
-                <p className="text-[9px] text-zinc-500 truncate mb-2">SOURCE: {img.url}</p>
-                <p className="text-[9px] text-blue-500 uppercase tracking-tighter">AGENT_ID: {img.created_by_user_id || "ANONYMOUS"}</p>
+            <button 
+            type="submit" 
+            className="bg-green-950/20 text-green-500 border border-green-900/50 px-6 py-2 text-[8px] font-black hover:bg-green-600 hover:text-white transition-all uppercase tracking-widest"
+            >
+            SAVE_CHANGES
+            </button>
+          </form>
+        ) : (
+          <div className="h-full flex flex-col justify-between">
+            <div>
+              <p className="text-sm font-bold text-zinc-100 leading-tight mb-2 break-words">{img.image_description}</p>
+              <p className="text-[9px] text-zinc-500 truncate font-mono">PATH: {img.url}</p>
             </div>
-
-            {/* Actions */}
-            <form action={deleteImage} className="flex items-center">
-                <input type="hidden" name="id" value={img.id} />
-                <button className="bg-red-900/20 text-red-500 border border-red-900/50 px-3 py-1 text-[8px] font-black hover:bg-red-600 hover:text-white transition-colors">
-                    DELETE
-                </button>
-            </form>
+            <p className="text-[9px] text-zinc-700 uppercase tracking-widest mt-4">
+              Agent: {img.created_by_user_id?.slice(0,8) || "System_Root"}
+            </p>
           </div>
-        ))}
+        )}
+      </div>
+
+      {/* 3. DELETE ACTION */}
+      {!isEditing && (
+        <form action={deleteImage} className="flex items-start">
+          <input type="hidden" name="id" value={img.id} />
+          <button className="bg-red-950/20 text-red-700 border border-red-900/20 px-3 py-1 text-[10px] font-black hover:bg-red-600 hover:text-white transition-all">
+            DELETE
+          </button>
+        </form>
+      )}
+    </div>
+  );
+})}
       </div>
 
       {/* PAGINATION CONTROLS */}
