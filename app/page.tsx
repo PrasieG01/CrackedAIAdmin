@@ -3,8 +3,7 @@ import { Bangers } from "next/font/google"
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { UsersRound, ImagePlus, MessageSquareQuote } from 'lucide-react'
-
+import { UsersRound, ImagePlus, MessageSquareQuote, Terminal, ShieldAlert, Book } from 'lucide-react'
 const bangers = Bangers({ weight: "400", subsets: ["latin"] });
 
 export default async function AdminDashboard() {
@@ -180,6 +179,33 @@ export default async function AdminDashboard() {
   <p className="text-[10px] text-zinc-500 mt-2 uppercase tracking-widest">Humor Output Audit</p>
 </Link>
 
+{/* 04: FLAVOR ENGINE (Orange) */}
+<Link href="/flavors" className="group relative bg-zinc-900/80 border border-zinc-800 p-8 text-center transition-all hover:border-orange-500 hover:shadow-[0_0_20px_rgba(249,115,22,0.15)]">
+  <MessageSquareQuote className="w-12 h-12 mx-auto mb-4 text-zinc-600 group-hover:text-orange-500 transition-colors" />
+  <h2 className={`${bangers.className} text-3xl text-white italic tracking-[0.15em] uppercase`}>FLAVOR ENGINE</h2>
+  <p className="text-[10px] text-zinc-500 mt-2 uppercase tracking-widest">Chain & Step Management</p>
+</Link>
+
+{/* 05: AUDIT TRAILS (Blue) */}
+<Link href="/admin/audit" className="group relative bg-zinc-900/80 border border-zinc-800 p-8 text-center transition-all hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.15)]">
+  <Terminal className="w-12 h-12 mx-auto mb-4 text-zinc-600 group-hover:text-blue-500 transition-colors" />
+  <h2 className={`${bangers.className} text-3xl text-white italic tracking-[0.15em] uppercase`}>AUDIT TRAILS</h2>
+  <p className="text-[10px] text-zinc-500 mt-2 uppercase tracking-widest">LLM Request/Response Debugging</p>
+</Link>
+
+{/* 05: TERM GLOSSARY */}
+<Link href="/terms" className="group relative bg-zinc-900/80 border border-zinc-800 p-8 text-center transition-all hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.15)]">
+  <Book className="w-12 h-12 mx-auto mb-4 text-zinc-600 group-hover:text-green-500 transition-colors" />
+  <h2 className={`${bangers.className} text-3xl text-white italic tracking-[0.15em] uppercase`}>TERM GLOSSARY</h2>
+  <p className="text-[10px] text-zinc-500 mt-2 uppercase tracking-widest">Standardized Definitions & Linguistic Rules</p>
+</Link>
+
+{/* 06: ACCESS CONTROL (Red) */}
+<Link href="/admin/access" className="group relative bg-zinc-900/80 border border-zinc-800 p-8 text-center transition-all hover:border-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.15)]">
+  <ShieldAlert className="w-12 h-12 mx-auto mb-4 text-zinc-600 group-hover:text-red-500 transition-colors" />
+  <h2 className={`${bangers.className} text-3xl text-white italic tracking-[0.15em] uppercase`}>ACCESS CONTROL</h2>
+  <p className="text-[10px] text-zinc-500 mt-2 uppercase tracking-widest">Whitelists & Allowed Domains</p>
+</Link>
   </div>
 </section>
   </div>
